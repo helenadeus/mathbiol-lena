@@ -1,0 +1,13 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title> Drag And Parse </title>
+  <script type="text/javascript" src="parse.js"></script>
+  </head>
+
+ <body>
+  		<h2>Just copy or drag/drop your data here (then remove the mouse from the text area):</h2>
+		<textarea id="data" rows="20" cols="100" onClick="this.value=''" onKeyPress="readData(event);" onMouseOut="readData(event);"></textarea>
+		<input type="button" onClick="document.getElementById('data').value='';window.location.reload();" value="Reset">
+ </body>
+</html>
