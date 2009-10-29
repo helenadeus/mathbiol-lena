@@ -7,7 +7,7 @@
 
  <body>
   		<h2>Just copy or drag/drop your data here (then remove the mouse from the text area):</h2>
-		<textarea id="data" rows="20" cols="100" onClick="this.value=''" onKeyPress="readData(event);" onMouseOut="readData(event);"></textarea>
+		<textarea id="data" rows="20" cols="100" onMouseOut="readData(event);"></textarea>
 		<input type="button" onClick="document.getElementById('data').value='';window.location.reload();" value="Reset">
  </body>
 </html>
