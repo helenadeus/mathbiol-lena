@@ -64,7 +64,7 @@ function drawTable(header, parsedData) {
 	}
 		
 	//now for each line, create a td  with the value inside
-	for (i = 0; i < parsedData.length; i++) {
+	for (var i = 0; i < parsedData.length; i++) {
 	   	var tr = document.createElement('tr');
 		tbody.appendChild(tr);
 
