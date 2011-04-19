@@ -1,0 +1,9 @@
+div.rowLabel {background:#FFFEEC;border:1px solid #ffc;margin:0 0 5px 0;float:left;width:50%;padding:0px 0;}
+div.row {margin:0 0 5px 0;float:left;width:100%;padding:0px 0;}
+div.row label {font-size: 12;float:left;display:block;width:8em;font-weight:bold;padding:0 0px;}
+div.row label:hover {background:#FFFF66;cursor:pointer;}
+
+div.row fieldset span {display:block;}
+div.row fieldset span label {float:none;display:inline;}
+div.row fieldset legend {font-weight:bold;}
+div.requiredRow {border:2px solid #049;}

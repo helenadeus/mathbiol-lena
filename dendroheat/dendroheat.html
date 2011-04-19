@@ -1,0 +1,172 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+ <HEAD>
+  <TITLE>Heatmap Dendrogram</TITLE>
+  <link rel="stylesheet" type="text/css" href="my.css"/>
+  <!--[if IE]><script type="text/javascript" src="../excanvas.js"></script><![endif]-->
+  <script type="text/javascript" src="jquery.js"></script>
+  <script type="text/javascript" src="get.js"></script>
+  <script type="text/javascript" src="jquery.md5.js"></script>
+  <script type="text/javascript" src="toJson.js"></script>
+  <script type="text/javascript" src="color.js"></script>
+  <script type="text/javascript" src="freq.js"></script>
+  <script type="text/javascript" src="squareform.js"></script>
+  <script type="text/javascript" src="data.js"></script>
+  <script type="text/javascript" src="graphs.js"></script>
+  <script type="text/javascript" src="pdist.js"></script>
+  <script type="text/javascript" src="linkage.js"></script>
+  <script type="text/javascript" src="dendrogram.js"></script>
+  <script type="text/javascript">
+
+  function startWithSPARQL() {
+	//INPUT
+	get();
+	if(typeof(GET.url)==='undefined'){
+		dendroheat();//use default values
+	}
+	else {
+		sparql = {};
+		sparql.url = GET.url;
+		sparql.key = (typeof(GET.key)!=='undefined')?GET.key:'';
+		sparql.query = (sparql.url+'sparql.php?key='+sparql.key+'&query=')+((typeof(GET.query)!=='undefined')?GET.query:('PREFIX rdfs%3A <http%3A%2F%2Fwww.w3.org%2F2000%2F01%2Frdf-schema%23>%0APREFIX rdf%3A <http%3A%2F%2Fwww.w3.org%2F1999%2F02%2F22-rdf-syntax-ns%23>%0APREFIX %3A <http%3A%2F%2F204.232.200.16%2Fstaphylococcus_demo%2F>%0ASELECT %3FITQBisolate  %3FarcC %3FaroE %3Fglp %3Fgmk %3Fpta %3Ftpi %3FyqiI  %3FMLST_ST%0A FROM <http%3A%2F%2F204.232.200.16%2Fstaphylococcus_demo%2F> %0A WHERE {%0A%3FITQBMolecularTyping rdfs%3Alabel %3FITQBisolate . %0A%3FITQBMolecularTyping %3AR172626 %3FarcC . %0A%3FITQBMolecularTyping %3AR172666 %3FaroE . %0A%3FITQBMolecularTyping %3AR172739 %3Fglp . %0A%3FITQBMolecularTyping %3AR172776 %3Fgmk . %0A%3FITQBMolecularTyping %3AR172825 %3Fpta . %0A%3FITQBMolecularTyping %3AR172856 %3Ftpi . %0A%3FITQBMolecularTyping %3AR172890 %3FyqiI . %0A%3FITQBMolecularTyping %3AR172930 %3FMLST_ST . %0A%0A }&clean=1'));
+		
+		data.executeSPARQLQuery(sparql.query, 'dendroheat');
+	}
+
+
+	
+
+  }
+
+ function dendroheat(rawData) {
+	
+	//build the skeleton for visualization; we will need for now 1 row, 2 cols
+	this.skeleton = function () {
+		
+		
+		$(document.createElement('table')).attr('id', 'skeleton').appendTo('body')
+					.append($(document.createElement('tr'))
+						.append($(document.createElement('td')).attr('id', 'options'))
+					)
+					.append($(document.createElement('tr'))
+						.append($(document.createElement('td')).attr('id', 'left').attr('valign', 'top'))
+						.append($(document.createElement('td')).attr('id', 'middle').attr('style','display:none'))
+						.append($(document.createElement('td')).attr('id', 'right'))
+						
+					);
+
+		
+		
+	}
+
+	
+	initVisualization = function (rawData) {
+		//Infer labels and header from the data unless specified; assuming rawData from the first entry
+		//data.header = ['label', 'arcC', 'aroE', 'glp', 'gmk', 'pta', 'tpi', 'yqiI'];	
+		//data.labels = ['a','b', 'c', 'd', 'e','f','g','h','i','j'];
+		data.identifierVar = (typeof(GET.identifier)!=='undefined')?GET.identifier:'ITQBisolate';
+		data.header = ['label'];data.variableSelection = [];
+		for (var i in rawData[0]) {
+			if(typeof(i)!=='undefined' && i!==data.identifierVar){
+				data.header.push(i);
+				data.variableSelection.push(i);
+			}
+		}
+		
+		
+		
+		// for the statistical stuff
+			
+			data.instanceSelection = [];
+			//when empty, use all
+			data.labels = [];data.instance_ids = [];
+			for (var i=0; i<rawData.length; i++) {
+					data.instance_ids.push(i);
+					data.labels.push(escape(rawData[i][data.identifierVar]));
+					data.instanceSelection.push(escape(rawData[i][data.identifierVar]));
+			}
+		data.instances = data.instanceSelections;	
+		//transformations of the data, one var at a time	
+			data.rawData = rawData;
+			for (var i=0; i<data.variableSelection.length; i++) {
+				var varName = data.variableSelection[i];
+				data.collectData(varName);
+				var gradient = {};gradient.min = [225,255,221]; gradient.max = [29,255,0];
+				data.colorData(varName,gradient.min,gradient.max);
+				data.paintData(varName);
+				
+			}
+		
+		//Start drawing
+		//before data can be used in collectData, we need to objectify it
+		data.tableid = 'tab';
+		data.rowHeight = '40px';
+		data.colWidth = '40px';
+		data.objectify();
+		this.skeleton();
+		graphs.initTable('left');
+		graphs.drawDataTable();
+			
+		//now that the table is drawn, go for the dendrogram, of course, synked with the table itself
+		
+		//canvas, for some reason, ends at 150 no matter the length of table ()
+		//dendrogram configuration happens only once
+		graphs.configureDendrogram(dendrogram.canvasid);
+		
+		//make Dendrogram will happen every time a variable is unselected or re-selected
+		graphs.makeDendrogram(rawData);
+		
+		//we are NOT done yet; now we need to re-order the table according to the lines in the table to match the ones in the dendrogram
+		var newOrder = dendrogram.groupLabel;
+		var newOrderIndex = dendrogram.newGroups;
+		graphs.orderTable(data.tableid, rawData, newOrderIndex);
+		data.dendrogram.metric = 'euclidean';
+		data.dendrogram.amalgamation = 'average';
+		graphs.drawPdistTable(dendrogram.p, newOrderIndex);
+		graphs.drawOptions();
+		//Now we are done ;-)
+
+	}
+	   
+	
+	//Default INPUT	
+  	//data for the table
+	if(typeof(rawData)==='undefined'){
+		var rawData = [
+		 {ITQBisolate : 'a', arcC: 31, aroE:4, glp:1, gmk:4,pta:12,tpi:1,yqiI:10},
+		 {ITQBisolate : 'b', arcC:2, aroE:2, glp:2, gmk:2, pta:6,tpi:3,yqiI:2},
+		 {ITQBisolate : 'c', arcC:1, aroE:65, glp:1, gmk:4, pta:12,tpi:1,yqiI:10},
+		 {ITQBisolate : 'd', arcC:2, aroE:4, glp:1, gmk:8, pta:4,tpi:4,yqiI:3},
+		 {ITQBisolate : 'e', arcC:3 , aroE:3 , glp:1, gmk:12, pta:4,tpi:4,yqiI:16},
+		 {ITQBisolate : 'f', arcC:31, aroE:4, glp:1, gmk:4, pta:12,tpi:1,yqiI:10},
+		 {ITQBisolate : 'g', arcC:3, aroE:35, glp:48 ,gmk:19 , pta:20  , tpi:26 , yqiI:39},
+		 {ITQBisolate : 'h', arcC:2, aroE:2  , glp:2  , gmk:2  , pta:6  , tpi:3  ,yqiI:2},
+		 {ITQBisolate : 'i', arcC:6 , aroE:5 , glp:6  , gmk:2  ,  pta:7  ,tpi:14   ,yqiI:5},
+		 {ITQBisolate : 'j', arcC:13 , aroE:3  , glp:1 ,gmk: 1  , pta:12   , tpi:11  , yqiI:13}
+	 ];
+	}
+		//	  var labels = ['a','b', 'c', 'd', 'e','f','g','h','i','j'];	
+		//	  var header = ['label', 'arcC', 'aroE', 'glp', 'gmk', 'pta', 'tpi', 'yqiI'];
+	
+	
+	initVisualization(rawData);
+  }
+  if(!Array.indexOf){
+	    Array.prototype.indexOf = function(obj){
+	        for(var i=0; i<this.length; i++){
+	            if(this[i]==obj){
+	                return i;
+	            }
+	        }
+	        return -1;
+	    }
+	}
+
+  </script>
+  
+ </HEAD>
+
+ <BODY onload="startWithSPARQL()">
+  
+ </BODY>
+</HTML>
