@@ -60,12 +60,13 @@
 	}
 
 	
-	initVisualization = function (rawData) {
+	initVisualization = function (rawData, id) {
 		//Infer labels and header from the data unless specified; assuming rawData from the first entry
 		//data.header = ['label', 'arcC', 'aroE', 'glp', 'gmk', 'pta', 'tpi', 'yqiI'];	
 		//data.labels = ['a','b', 'c', 'd', 'e','f','g','h','i','j'];
-		data.identifierVar = (typeof(GET.identifier)!=='undefined')?GET.identifier:'ITQBisolate';
+		//data.identifierVar = (typeof(GET.identifier)!=='undefined')?GET.identifier:'ITQBisolate';
 		data.header = ['label'];data.variableSelection = [];
+		data.identifierVar  = id;
 		for (var i in rawData[0]) {
 			if(typeof(i)!=='undefined' && i!==data.identifierVar){
 				data.header.push(i);
@@ -131,26 +132,37 @@
 	
 	//Default INPUT	
   	//data for the table
-	if(typeof(rawData)==='undefined'){
-		var rawData = [
-		 {ITQBisolate : 'a', arcC: 31, aroE:4, glp:1, gmk:4,pta:12,tpi:1,yqiI:10},
-		 {ITQBisolate : 'b', arcC:2, aroE:2, glp:2, gmk:2, pta:6,tpi:3,yqiI:2},
-		 {ITQBisolate : 'c', arcC:1, aroE:65, glp:1, gmk:4, pta:12,tpi:1,yqiI:10},
-		 {ITQBisolate : 'd', arcC:2, aroE:4, glp:1, gmk:8, pta:4,tpi:4,yqiI:3},
-		 {ITQBisolate : 'e', arcC:3 , aroE:3 , glp:1, gmk:12, pta:4,tpi:4,yqiI:16},
-		 {ITQBisolate : 'f', arcC:31, aroE:4, glp:1, gmk:4, pta:12,tpi:1,yqiI:10},
-		 {ITQBisolate : 'g', arcC:3, aroE:35, glp:48 ,gmk:19 , pta:20  , tpi:26 , yqiI:39},
-		 {ITQBisolate : 'h', arcC:2, aroE:2  , glp:2  , gmk:2  , pta:6  , tpi:3  ,yqiI:2},
-		 {ITQBisolate : 'i', arcC:6 , aroE:5 , glp:6  , gmk:2  ,  pta:7  ,tpi:14   ,yqiI:5},
-		 {ITQBisolate : 'j', arcC:13 , aroE:3  , glp:1 ,gmk: 1  , pta:12   , tpi:11  , yqiI:13}
-	 ];
+//	if(typeof(rawData)==='undefined'){
+//		var rawData = [
+//		 {ITQBisolate : 'a', arcC: 31, aroE:4, glp:1, gmk:4,pta:12,tpi:1,yqiI:10},
+//		 {ITQBisolate : 'b', arcC:2, aroE:2, glp:2, gmk:2, pta:6,tpi:3,yqiI:2},
+//		 {ITQBisolate : 'c', arcC:1, aroE:65, glp:1, gmk:4, pta:12,tpi:1,yqiI:10},
+//		 {ITQBisolate : 'd', arcC:2, aroE:4, glp:1, gmk:8, pta:4,tpi:4,yqiI:3},
+//		 {ITQBisolate : 'e', arcC:3 , aroE:3 , glp:1, gmk:12, pta:4,tpi:4,yqiI:16},
+//		 {ITQBisolate : 'f', arcC:31, aroE:4, glp:1, gmk:4, pta:12,tpi:1,yqiI:10},
+//		 {ITQBisolate : 'g', arcC:3, aroE:35, glp:48 ,gmk:19 , pta:20  , tpi:26 , yqiI:39},
+//		 {ITQBisolate : 'h', arcC:2, aroE:2  , glp:2  , gmk:2  , pta:6  , tpi:3  ,yqiI:2},
+//		 {ITQBisolate : 'i', arcC:6 , aroE:5 , glp:6  , gmk:2  ,  pta:7  ,tpi:14   ,yqiI:5},
+//		 {ITQBisolate : 'j', arcC:13 , aroE:3  , glp:1 ,gmk: 1  , pta:12   , tpi:11  , yqiI:13}
+//	 ];
+//	}
+//		//	  var labels = ['a','b', 'c', 'd', 'e','f','g','h','i','j'];	
+//		//	  var header = ['label', 'arcC', 'aroE', 'glp', 'gmk', 'pta', 'tpi', 'yqiI'];
+//	
+//	
+//	initVisualization(rawData);
+    if(typeof(rawData)==='undefined'){
+		$.getJSON('datamatrices/result.js', function (data){
+			results = data; 
+			var rawData = parseJSONResults(results);
+			id = 'substance';
+			initVisualization(rawData, id);
+		});
+	
 	}
-		//	  var labels = ['a','b', 'c', 'd', 'e','f','g','h','i','j'];	
-		//	  var header = ['label', 'arcC', 'aroE', 'glp', 'gmk', 'pta', 'tpi', 'yqiI'];
-	
-	
-	initVisualization(rawData, 'ITQBisolate');
+
   }
+
   if(!Array.indexOf){
 	    Array.prototype.indexOf = function(obj){
 	        for(var i=0; i<this.length; i++){
@@ -161,6 +173,63 @@
 	        return -1;
 	    }
 	}
+
+	function parseJSONResults(results){
+		var substances = [];
+		var concepts = [];
+		var conceptFirstLabel = {};
+		var substanceLabel = {};
+		var consData = {};
+		var rawData = [];
+		
+		
+		//get a list of  concepts ans substances Labels
+		for (var i=0; i<results.results.bindings.length; i++) {
+			var s = results.results.bindings[i].substance.value;
+			var sl = results.results.bindings[i].substanceName.value;
+			var cl = results.results.bindings[i].conceptLabel.value;
+			var c = results.results.bindings[i].concepts.value;
+			
+			if(typeof(conceptFirstLabel[c])==='undefined'){
+				conceptFirstLabel[c] = cl;
+			}
+			if(typeof(substanceLabel [s])==='undefined'){
+				substanceLabel[s] = sl;
+			}
+			
+			substances.push(s);
+			concepts.push(c);
+			if(typeof(consData[s])==='undefined'){
+				consData[s] = {};
+				
+			}
+			if(typeof(consData[s][c])==='undefined'){
+				consData[s][c] = 1;
+			}
+		}
+		//now get all the unique concepts
+		var unConcepts = $.unique(concepts);
+		var unSubstances = $.unique(substances);
+		//now assemble to required data matrix with the substances as rows and its concepts as cols
+		for (var s in consData) {
+			var i = {};
+			i.substance = substanceLabel[s];
+			for (var c=0; c<unConcepts.length; c++) {
+				var cLabel = conceptFirstLabel[unConcepts[c]];
+				if(typeof(consData[s][unConcepts[c]])!=='undefined'){
+					i[cLabel] = 1;
+				}
+				else {
+					i[cLabel] = 0;
+				}
+			}
+				
+			
+			rawData.push(i);
+		}
+		return rawData;
+	}
+
 
   </script>
   

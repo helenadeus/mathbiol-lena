@@ -14,6 +14,7 @@ var data = {
 		dendrogram : {x:[], labels: [] },
 		repeatedInstances : {},
 		instanceLabels : {},
+		identifierVar :'',
 		
 		objectify : function () {
 		//turn data as array into object	

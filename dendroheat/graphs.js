@@ -38,9 +38,10 @@ var graphs  = {// this variable will have elements, and methods, to manipulate t
 		for (var i=0; i<data.variableSelection.length; i++) {
 			//then each varname
 			var varName = data.variableSelection[i];
-			$(document.createElement('td')).attr('id', 'header_'+varName).attr('width',data.colWidth).attr('style', 'background-color: rgb('+headerColors[i+1]+')').html(varName).appendTo('#header');
+			var varName4ID =$.md5(data.variableSelection[i]);
+			$(document.createElement('td')).attr('id', 'header_'+varName4ID).attr('width',data.colWidth).attr('style', 'background-color: rgb('+headerColors[i+1]+')').html(varName).appendTo('#header');
 			//now the checkbox
-			$(document.createElement('input')).attr('type','checkbox').attr('id', 'check_'+varName).attr('control_var',varName).attr('checked', true).appendTo('#header_'+varName).click(function (e) {
+			$(document.createElement('input')).attr('type','checkbox').attr('id', 'check_'+varName4ID).attr('control_var',varName).attr('checked', true).appendTo('#header_'+varName4ID).click(function (e) {
 				
 				var varName = $(this).attr('control_var');
 				var checked = $(this).attr('checked');
